@@ -367,35 +367,48 @@ resource "aws_iam_role_policy_attachment" "sfn_admin" {
 resource "aws_sfn_state_machine" "pipeline_state_machine" {
   name     = "state-machine-${random_string.suffix.result}"
   role_arn = aws_iam_role.step_functions_role.arn
+
   definition = jsonencode({
-    Comment : "Pipeline orchestrator",
-    StartAt : "InvokeProducer",
-    States : {
-      InvokeProducer : {
-        Type : "Task",
-        Resource : aws_lambda_function.producer.arn,
-        Next : "WaitForMessages"
-      },
-      WaitForMessages : {
-        Type : "Wait",
-        Seconds : 10,
-        Next : "InvokeProcessor"
-      },
-      InvokeProcessor : {
-        Type : "Task",
-        Resource : aws_lambda_function.processor.arn,
-        Next : "StartGlueJob"
-      },
-      StartGlueJob : {
-        Type : "Task",
-        Resource : "arn:aws:states:::glue:startJobRun.sync",
-        Parameters : {
-          JobName : aws_glue_job.pipeline_job.name
-        },
-        End : true
+    Comment = "Pipeline orchestrator"
+    StartAt = "InvokeProducer"
+
+    States = {
+      InvokeProducer = {
+        Type     = "Task"
+        Resource = aws_lambda_function.producer.arn
+        Next     = "WaitForMessages"
+      }
+
+      WaitForMessages = {
+        Type     = "Wait"
+        Seconds  = 10
+        Next     = "InvokeProcessor"
+      }
+
+      InvokeProcessor = {
+        Type     = "Task"
+        Resource = aws_lambda_function.processor.arn
+        Next     = "StartGlueJob"
+      }
+
+      StartGlueJob = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::glue:startJobRun.sync"
+
+        Parameters = {
+          JobName = aws_glue_job.pipeline_job.name
+
+          Arguments = {
+            "--CONFIG_PATH.$"      = "$.CONFIG_PATH"
+            "--extra-py-files.$"   = "$.DEPS_PATH"
+          }
+        }
+
+        End = true
       }
     }
   })
+
   depends_on = [
     aws_iam_role_policy_attachment.sfn_full,
     aws_iam_role_policy_attachment.sfn_admin,
