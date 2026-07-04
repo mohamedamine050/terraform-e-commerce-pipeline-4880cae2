@@ -399,8 +399,8 @@ resource "aws_sfn_state_machine" "pipeline_state_machine" {
           JobName = aws_glue_job.pipeline_job.name
 
           Arguments = {
-            "--CONFIG_PATH.$"      = "$.CONFIG_PATH"
-            "--extra-py-files.$"   = "$.DEPS_PATH"
+            "--CONFIG_PATH"    = "$.CONFIG_PATH"
+            "--extra-py-files" = "$.DEPS_PATH"
           }
         }
 
