@@ -417,3 +417,15 @@ resource "aws_sfn_state_machine" "pipeline_state_machine" {
     aws_glue_job.pipeline_job
   ]
 }
+
+resource "aws_lambda_event_source_mapping" "processor_sqs" {
+  event_source_arn = aws_sqs_queue.pipeline_queue.arn
+  function_name    = aws_lambda_function.processor.arn
+
+  enabled    = true
+  batch_size = 10
+
+  function_response_types = [
+    "ReportBatchItemFailures"
+  ]
+}
