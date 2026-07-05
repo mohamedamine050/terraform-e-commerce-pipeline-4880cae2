@@ -400,6 +400,7 @@ resource "aws_sfn_state_machine" "pipeline_state_machine" {
 
           Arguments = {
             "--CONFIG_PATH"    = "s3://tfstate-e-commerce-pipeline-u0op6129/config.json"
+            "--extra-py-files" = "s3://tfstate-e-commerce-pipeline-u0op6129/dependencies.zip"
           }
         }
 
